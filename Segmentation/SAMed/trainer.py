@@ -17,7 +17,7 @@ from tqdm import tqdm
 from utils import DiceLoss, Focal_loss
 from torchvision import transforms
 from icecream import ic
-from datasets.dataset_fairseg_abs import FairSeg_dataset, RandomGenerator 
+from datasets.dataset_fairseg_abs import FairSeg_dataset, RandomGenerator # 严格按照list地址读取
 
 def calc_loss(outputs, low_res_label_batch, ce_loss, dice_loss, dice_weight:float=0.8):
     low_res_logits = outputs['low_res_logits']

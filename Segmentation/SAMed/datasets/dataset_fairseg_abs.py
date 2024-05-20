@@ -35,12 +35,14 @@ from PIL import Image
 #########
 import re
 
-hashmap = {-1:1, -2:2, 0:0}
+hashmap = {-1: 1, -2: 2, 0: 0}
+
 
 def load_synthetic_data_paths(path_file):
     with open(path_file, 'r') as file:
         synthetic_data_paths = [line.strip() for line in file]
     return synthetic_data_paths
+
 
 def random_rot_flip(image, label):
     k = np.random.randint(0, 4)
@@ -58,16 +60,19 @@ def random_rotate(image, label):
     label = ndimage.rotate(label, angle, order=0, reshape=False)
     return image, label
 
+
 def crop_center(img, cropx, cropy):
-    y,x = img.shape
+    y, x = img.shape
     startx = x//2-(cropx//2)
-    starty = y//2-(cropy//2)    
-    return img[starty:starty+cropy,startx:startx+cropx]
+    starty = y//2-(cropy//2)
+    return img[starty:starty+cropy, startx:startx+cropx]
+
 
 class RandomGenerator(object):
     '''
     随机增强
     '''
+
     def __init__(self, output_size, low_res, center_crop_size, use_normalize=False):
         self.output_size = output_size
         self.low_res = low_res
@@ -76,25 +81,26 @@ class RandomGenerator(object):
         self.center_crop_size = center_crop_size
 
     def __call__(self, sample):
-        image, label, attr_label, pid = sample['image'], sample['label'], sample['attr_label'], sample['pid'] 
-
+        image, label, attr_label, pid = sample['image'], sample['label'], sample['attr_label'], sample['pid']
 
         image = np.clip(image, self.a_min, self.a_max)
         if self.use_normalize:
             assert self.a_min != self.a_max
-            image = (image - self.a_min) / (self.a_max - self.a_min)     
+            image = (image - self.a_min) / (self.a_max - self.a_min)
 
-        ## convert label to training format
+        # convert label to training format
         for k in sorted(hashmap.keys()):
             label[label == k] = hashmap[k]
-        
-        image = crop_center(image, self.center_crop_size, self.center_crop_size)
-        label = crop_center(label, self.center_crop_size, self.center_crop_size)
-        
+
+        image = crop_center(image, self.center_crop_size,
+                            self.center_crop_size)
+        label = crop_center(label, self.center_crop_size,
+                            self.center_crop_size)
+
         # print(np.max(image))
         # im = Image.fromarray(image)
         # im = im.convert("L")
-        
+
         # im.save("image.jpg")
         # lab = Image.fromarray(label*50)
         # lab = lab.convert("L")
@@ -108,19 +114,23 @@ class RandomGenerator(object):
             image, label = random_rotate(image, label)
         x, y = image.shape
         if x != self.output_size[0] or y != self.output_size[1]:
-            image = zoom(image, (self.output_size[0] / x, self.output_size[1] / y), order=3)  # why not 3?
-            label = zoom(label, (self.output_size[0] / x, self.output_size[1] / y), order=0)
+            # why not 3?
+            image = zoom(
+                image, (self.output_size[0] / x, self.output_size[1] / y), order=3)
+            label = zoom(
+                label, (self.output_size[0] / x, self.output_size[1] / y), order=0)
         label_h, label_w = label.shape
-        low_res_label = zoom(label, (self.low_res[0] / label_h, self.low_res[1] / label_w), order=0)
+        low_res_label = zoom(
+            label, (self.low_res[0] / label_h, self.low_res[1] / label_w), order=0)
         image = torch.from_numpy(image.astype(np.float32)).unsqueeze(0)
         image = repeat(image, 'c h w -> (repeat c) h w', repeat=3)
         label = torch.from_numpy(label.astype(np.float32))
         low_res_label = torch.from_numpy(low_res_label.astype(np.float32))
         attr_label = torch.tensor(attr_label).long()
-        sample = {'image': image, 'label': label.long(), 'low_res_label': low_res_label.long(), 'attr_label': attr_label, 'pid': pid}
-        
-        return sample
+        sample = {'image': image, 'label': label.long(
+        ), 'low_res_label': low_res_label.long(), 'attr_label': attr_label, 'pid': pid}
 
+        return sample
 
 
 class TestGenerator(object):
@@ -132,38 +142,48 @@ class TestGenerator(object):
         self.center_crop_size = center_crop_size
 
     def __call__(self, sample):
-        image, label, attr_label, pid = sample['image'], sample['label'], sample['attr_label'], sample['pid'] 
+        image, label, attr_label, pid = sample['image'], sample['label'], sample['attr_label'], sample['pid']
 
         image = np.clip(image, self.a_min, self.a_max)
         if self.use_normalize:
             assert self.a_min != self.a_max
-            image = (image - self.a_min) / (self.a_max - self.a_min)     
+            image = (image - self.a_min) / (self.a_max - self.a_min)
 
-        ## convert label to training format
+        # convert label to training format
         for k in sorted(hashmap.keys()):
             label[label == k] = hashmap[k]
-        
-        image = crop_center(image, self.center_crop_size, self.center_crop_size)
-        label = crop_center(label, self.center_crop_size, self.center_crop_size)
-      
+
+        image = crop_center(image, self.center_crop_size,
+                            self.center_crop_size)
+        label = crop_center(label, self.center_crop_size,
+                            self.center_crop_size)
+
         x, y = image.shape
         if x != self.output_size[0] or y != self.output_size[1]:
-            image = zoom(image, (self.output_size[0] / x, self.output_size[1] / y), order=3)  # why not 3?
-            label = zoom(label, (self.output_size[0] / x, self.output_size[1] / y), order=0)
+            # why not 3?
+            image = zoom(
+                image, (self.output_size[0] / x, self.output_size[1] / y), order=3)
+            label = zoom(
+                label, (self.output_size[0] / x, self.output_size[1] / y), order=0)
         label_h, label_w = label.shape
-        low_res_label = zoom(label, (self.low_res[0] / label_h, self.low_res[1] / label_w), order=0)
+        low_res_label = zoom(
+            label, (self.low_res[0] / label_h, self.low_res[1] / label_w), order=0)
         image = torch.from_numpy(image.astype(np.float32)).unsqueeze(0)
         image = repeat(image, 'c h w -> (repeat c) h w', repeat=3)
         label = torch.from_numpy(label.astype(np.float32))
         low_res_label = torch.from_numpy(low_res_label.astype(np.float32))
         attr_label = torch.tensor(attr_label).long()
-        sample = {'image': image, 'label': label.long(), 'low_res_label': low_res_label.long(), 'attr_label': attr_label, 'pid': pid}
+        sample = {'image': image, 'label': label.long(
+        ), 'low_res_label': low_res_label.long(), 'attr_label': attr_label, 'pid': pid}
         return sample
-    
-attr_to_race = {2: 0, 3: 1, 7:2}
-attr_to_language = {0: 0, 1: 1, 2:2, -1:-1}
+
+
+attr_to_race = {2: 0, 3: 1, 7: 2}
+attr_to_language = {0: 0, 1: 1, 2: 2, -1: -1}
+
+
 class FairSeg_dataset(Dataset):
-    def __init__(self, base_dir, split, args, balanced=False, bal_attr='race', \
+    def __init__(self, base_dir, split, args, balanced=False, bal_attr='race',
                  resolution=224, transform=None, attr_label='race', img_type='fundus', mix_ratio=0.50):
         self.transform = transform  # using transform in torch!
         self.split = split
@@ -171,19 +191,20 @@ class FairSeg_dataset(Dataset):
         self.args = args
         self.img_type = img_type
         self.needBalance = balanced
-        
+
         real_list_dir = args.list_dir
 
         real_dir = base_dir
 
-        # syn_list_dir = '/DATA_EDS2/AIGC/2312/xuhr2312/workspace/FairSegDiff/SAMed/lists/Equal_Distribution'
+        # syn_list_dir = '/path/to/your/FairSegDiff/SAMed/lists/Equal_Distribution'
 
-        self.real_list = open(os.path.join(real_list_dir, self.split+'.txt')).readlines()
+        self.real_list = open(os.path.join(
+            real_list_dir, self.split+'.txt')).readlines()
         # self.real_list = [os.path.join(real_dir, filename) for filename in self.real_name_list]
         # self.syn_list = open(os.path.join(syn_list_dir, self.split+'.txt')).readlines()
-        
+
         self.attr_label = attr_label
-        
+
         self.bal_attr = bal_attr
         self.balance_factor = 1.
         self.label_samples = dict()
@@ -192,19 +213,18 @@ class FairSeg_dataset(Dataset):
         self.per_attr_samples = dict()
 
         # self.mix_ratio = mix_ratio
-        # self.synthetic_data_paths = load_synthetic_data_paths("/DATA_EDS2/AIGC/2312/xuhr2312/workspace/FairSegDiff/SAMed/lists/FairSeg_generate_110/train.txt")
-        
+        # self.synthetic_data_paths = load_synthetic_data_paths("/path/to/your/FairSegDiff/SAMed/lists/FairSeg_generate_110/train.txt")
+
         # all_files = self.find_all_files(self.data_dir, suffix='npz')
-        
+
         self.resolution = resolution
-        if self.attr_label == 'race' or self.attr_label == 'language': 
+        if self.attr_label == 'race' or self.attr_label == 'language':
             self.sens_classes = 3
         else:
             self.sens_classes = 2
 
         # if self.split == 'train' and self.needBalance:
         #     # all_files = all_files[:8000]
-        #     # TODO 修改bal
         #     # self.data_files = self.bal_samples_based_attr(self.sample_list)
         #     self.data_files = self.real_list
 
@@ -214,7 +234,7 @@ class FairSeg_dataset(Dataset):
         # else: # testing set
         #     # self.data_files = all_files[8000:]
         #     self.data_files = self.real_list
-        if self.split == 'train' :
+        if self.split == 'train':
             self.data_files = self.real_list
         # elif self.split == 'train' and mix_ratio == 0 :
         #     self.data_files = self.real_list
@@ -223,42 +243,36 @@ class FairSeg_dataset(Dataset):
         elif self.split == 'test':
             self.data_files = self.real_list
 
-        train_txt = os.path.join(args.output, 'data_files.txt') 
+        train_txt = os.path.join(args.output, 'data_files.txt')
 
         with open(train_txt, 'w') as file:
             for item in self.data_files:
                 file.write(f"{item}")
 
-
-
     def __len__(self):
         return len(self.data_files)
-    
 
     def mix_original_and_synthetic(self, original_samples, synthetic_samples, mix_ratio):
         mixed_samples = []
         num_original_samples = len(original_samples)
         num_synthetic_samples = len(synthetic_samples)
-        
-        # 计算混合时的样本数量
-        num_mixed_samples = int(num_original_samples * (1 - mix_ratio)) + int(num_synthetic_samples * mix_ratio)
 
-        # 随机选择原始样本和合成样本进行混合
-        mixed_samples += random.sample(original_samples, int(num_original_samples * (1 - mix_ratio)))
-        mixed_samples += random.sample(synthetic_samples, int(num_synthetic_samples * mix_ratio))
+        num_mixed_samples = int(
+            num_original_samples * (1 - mix_ratio)) + int(num_synthetic_samples * mix_ratio)
+        mixed_samples += random.sample(original_samples,
+                                       int(num_original_samples * (1 - mix_ratio)))
+        mixed_samples += random.sample(synthetic_samples,
+                                       int(num_synthetic_samples * mix_ratio))
 
         return mixed_samples
-    
 
     def bal_samples_based_attr(self, all_files):
-        '''
-        未修改
-        '''
-        
+
         for idx in range(0, len(all_files)):
             npz_file = os.path.join(self.data_dir, all_files[idx])
             raw_data = np.load(npz_file, allow_pickle=True)
-            cur_attr_label = raw_data[self.bal_attr].item() # self.race_mapping[raw_data['race'].item()]
+            # self.race_mapping[raw_data['race'].item()]
+            cur_attr_label = raw_data[self.bal_attr].item()
             if cur_attr_label not in self.per_attr_samples:
                 self.per_attr_samples[cur_attr_label] = list()
             self.per_attr_samples[cur_attr_label].append(all_files[idx])
@@ -266,7 +280,7 @@ class FairSeg_dataset(Dataset):
                 if len(self.per_attr_samples[cur_attr_label]) > self.balanced_max else self.balanced_max
         ttl_num_samples = 0
         self.class_samples_num = [0]*len(list(self.label_samples.keys()))
-        for i, (k,v) in enumerate(self.label_samples.items()):
+        for i, (k, v) in enumerate(self.label_samples.items()):
             self.class_samples_num[int(k)] = len(v)
             ttl_num_samples += len(v)
             print(f'{k}-th identity training samples: {len(v)}')
@@ -276,22 +290,22 @@ class FairSeg_dataset(Dataset):
         # Oversample the classes with fewer elements than the max
         for i_label in self.label_samples:
             while len(self.label_samples[i_label]) < self.balanced_max*self.balance_factor:
-                self.label_samples[i_label].append(random.choice(self.label_samples[i_label]))
-        
-        data_files = []
-        for i, (k,v) in enumerate(self.label_samples.items()):
-            data_files = data_files + v
-        
-        return data_files
-    
+                self.label_samples[i_label].append(
+                    random.choice(self.label_samples[i_label]))
 
-    def group_counts(self, resample_which = 'group'):
-        
+        data_files = []
+        for i, (k, v) in enumerate(self.label_samples.items()):
+            data_files = data_files + v
+
+        return data_files
+
+    def group_counts(self, resample_which='group'):
+
         # if self.sens_name == 'Sex':
         #     mapping = {'M': 0, 'F': 1}
         #     groups = self.dataframe['Sex'].values
         #     group_array = [*map(mapping.get, groups)]
-            
+
         # elif self.sens_name == 'Age':
         #     if self.sens_classes == 2:
         #         groups = self.dataframe['Age_binary'].values
@@ -300,7 +314,7 @@ class FairSeg_dataset(Dataset):
         #     elif self.sens_classes == 4:
         #         groups = self.dataframe['Age_multi4'].values.astype('int')
         #     group_array = groups.tolist()
-            
+
         # elif self.sens_name == 'Race':
         #     mapping = {'White': 0, 'non-White': 1}
         #     groups = self.dataframe['Race'].values
@@ -319,30 +333,30 @@ class FairSeg_dataset(Dataset):
         #     group_array = groups.tolist()
         # else:
         #     raise ValueError("sensitive attribute does not defined in BaseDataset")
-        
+
         # if resample_which == 'balanced':
 
         #     #get class
         #     labels = self.Y.tolist()
         #     num_labels = len(set(labels))
         #     num_groups = len(set(group_array))
-            
+
         #     group_array = (np.asarray(group_array) * num_labels + np.asarray(labels)).tolist()
 
         group_count = [0] * self.sens_classes
-       
+
         for idx in range(0, len(self.data_files)):
             npz_file = self.data_files[idx].strip('\n')
             raw_data = np.load(npz_file, allow_pickle=True)
-            attr_label = raw_data[self.attr_label].item() 
+            attr_label = raw_data[self.attr_label].item()
             if self.attr_label == "age":
-                attr_label=attr_label/365
+                attr_label = attr_label/365
                 if attr_label < 60:
                     attr_label = 0
                 else:
                     attr_label = 1
             elif self.attr_label == "maritalstatus":
-                if attr_label != 0 and attr_label != -1: 
+                if attr_label != 0 and attr_label != -1:
                     attr_label = 1
             elif self.attr_label == 'race':
                 attr_label = attr_to_race[attr_label]
@@ -350,7 +364,7 @@ class FairSeg_dataset(Dataset):
                 attr_label = attr_to_language[attr_label]
             if attr_label != -1:
                 # print(attr_label)
-                group_count[attr_label]+=1
+                group_count[attr_label] += 1
         # self._group_array = torch.LongTensor(group_array)
         # if resample_which == 'group':
         #     self._group_counts = (torch.arange(self.sens_classes).unsqueeze(1)==self._group_array).sum(1).float()
@@ -363,31 +377,14 @@ class FairSeg_dataset(Dataset):
         return self._group_counts
 
     def find_all_files(self, folder, suffix='npz'):
-        files = [f for f in os.listdir(folder) \
-                 if os.path.isfile(os.path.join(folder, f)) and \
-                    os.path.join(folder, f).endswith(suffix)]
+        files = [f for f in os.listdir(folder)
+                 if os.path.isfile(os.path.join(folder, f)) and
+                 os.path.join(folder, f).endswith(suffix)]
         return files
 
     def __getitem__(self, idx):
-        data_path =  self.data_files[idx].strip('\n')
-        
-        '''参考内容
-        def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
+        data_path = self.data_files[idx].strip('\n')
 
-            if len(self.synthetic_examples[idx]) > 0 and \
-                    np.random.uniform() < self.synthetic_probability:
-
-                image, label = random.choice(self.synthetic_examples[idx])
-                if isinstance(image, str): image = Image.open(image)
-
-            else:
-
-                image = self.get_image_by_idx(idx)
-                label = self.get_label_by_idx(idx)
-
-            return self.transform(image), label
-
-        '''
         # if np.random.uniform() < self.synthetic_probability:
 
         #     synthetic_path = random.choice(self.synthetic_data_paths)
@@ -397,20 +394,20 @@ class FairSeg_dataset(Dataset):
         #     data = np.load(data_path, allow_pickle=True)
 
         data = np.load(data_path, allow_pickle=True)
-     
+
         image, label = data[self.img_type], data['disc_cup_borders']
-        
+
         attr_label = data[self.attr_label].item()
         # print(data['maritalstatus'].item())
-       
+
         if self.attr_label == "age":
-            attr_label=attr_label/365
+            attr_label = attr_label/365
             if attr_label < 60:
                 attr_label = 0
             else:
                 attr_label = 1
         elif self.attr_label == "maritalstatus":
-            if attr_label != 0 and attr_label != -1: 
+            if attr_label != 0 and attr_label != -1:
                 attr_label = 1
         elif self.attr_label == 'race':
             attr_label = attr_to_race[attr_label]
@@ -426,10 +423,9 @@ class FairSeg_dataset(Dataset):
         # language_t = -1
         # else:
         # language_t = 2
-        
+
         # pid = data['pid'].item()
-        
-        #! 未修改
+
         number = int(re.findall(r'\d+', self.data_files[idx])[0])
 
         pid = number
@@ -438,15 +434,11 @@ class FairSeg_dataset(Dataset):
         # Since the channel dimension of nature image is 3, that of medical image should also be 3
         # ['fundus_slo', 'disc_cup', 'axes_cup', 'axes_disc', 'md', 'tds', \
         # 'pid', 'maritalstatus', 'hispanic', 'language', 'gender', 'race', 'age', 'datadir']
-        sample = {'image': image, 'label': label, 'attr_label': attr_label, 
-        'pid': pid
-        }
-        
+        sample = {'image': image, 'label': label, 'attr_label': attr_label,
+                  'pid': pid
+                  }
+
         if self.transform:
             sample = self.transform(sample)
-        
+
         return sample
-
-
-
-

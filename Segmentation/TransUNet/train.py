@@ -12,12 +12,12 @@ from trainer import trainer_fairseg
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--root_path', type=str,
-                    default='/data/home/tiany/Datasets/fair_segmentation_1w_replace_544_white', help='root dir for data')
+                    default='/path/to/Datasets/fair_segmentation_1w_replace_544_white', help='root dir for data')
 parser.add_argument('--output', type=str, default='./out')
 parser.add_argument('--dataset', type=str,
                     default='FairSeg', help='experiment_name')
 parser.add_argument('--list_dir', type=str,
-                    default='/data/home/tiany/Projects/project_TransUNet/TransUNet/lists/FairSeg_SLO_replace_544_whole_data', help='list dir')
+                    default='/path/to/TransUNet/lists/FairSeg_SLO_replace_544_whole_data', help='list dir')
 parser.add_argument('--num_classes', type=int,
                     default=3, help='output channel of network')
 parser.add_argument('--max_iterations', type=int,

@@ -3,6 +3,7 @@ import os
 import random
 
 ##### Equal Scale Data Combination #######
+# Total 8000
 # Real: White 1521, Black 295, Asian 184
 # Syn:  White 1145, Black 2372, Asian 2483
 # All:  White 2666, Black 2667, Asian 2667

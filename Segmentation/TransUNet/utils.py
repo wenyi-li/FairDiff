@@ -431,7 +431,7 @@ def test_single_image(image, label, net, classes, multimask_output=None, patch_s
 
         # print(np.max(output_masks.squeeze().cpu().detach().numpy()))
         # auc_score = compute_multi_class_auc(output_masks.squeeze().cpu().detach().numpy(), label)
-        # TODO 可能是这里的问题，这里把所有的output换成output_masks了
+
             
         # output_masks = outputs['masks']
         softmaxed_prob = torch.softmax(outputs, dim=1)

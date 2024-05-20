@@ -144,19 +144,21 @@ cd Segmentation/SAMed
 
 ### Data Combination
 
-We load the training data by reading `file.txt`, enabling the mixing of real and synthetic data by generating `file.txt` with different mixing ratios:
+In order to ensure that the data used in all experiments is strictly consistent, the mixing methods of different types of data and the usage of synthetic data under different conditions have been written into `txt` files and stored in the `lists/` directory. 
+
+You can use the command below for more data list generation.
 
 ```bash
 python data_combination.py
 ```
 
-Then, move your list of files to `lists/`.
-
-
-
-### Todo @Xuhr
+In order to visually demonstrate our experimental process, the list files generated in our environment have not been deleted, but have been anonymized.
 
 ### Training
+
+First, prepare the dataset according to the synthesis and balancing methods mentioned in the paper, and use the generated list mentioned above for the experiment you want to complete.
+
+In `train.sh`, please specify the base_dir, list_dir and attributes you want to use.  Finally, run this command.
 
 ```
 ./train.sh
@@ -164,13 +166,8 @@ Then, move your list of files to `lists/`.
 
 ### Testing
 
+For testing, please specify the base_dir, attribute, path of pretrained lora checkpoint, and output_dir. Then run this command.
+
 ```
 ./test.sh
 ```
-
-
-
-
-
-
-

@@ -171,3 +171,6 @@ For testing, please specify the base_dir, attribute, path of pretrained lora che
 ```
 ./test.sh
 ```
+
+## Model Zoo
+Coming Soon...

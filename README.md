@@ -1,4 +1,4 @@
-# FairDiff: Enhancing Fairness in Fundus Image Segmentation with Point-Image Diffusion
+# FairDiff: Fair Segmentation with Point-Image Diffusion
 
 ![framework](./assets/framework.png)
 

@@ -2,7 +2,7 @@
 
 ![framework](./assets/framework.png)
 
-The official code repository for paper "FairDiff: Enhancing Fairness in Fundus Image Segmentation with Point-Image Diffusion".
+[MICCAI 2024] The official code repository for paper "FairDiff: Fair Segmentation with Point-Image Diffusion".
 
 ## Installation
 

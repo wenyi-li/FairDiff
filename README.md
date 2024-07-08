@@ -1,6 +1,6 @@
 # FairDiff: Fair Segmentation with Point-Image Diffusion
 
-![framework](./assets/framework.png)
+![pipeline](./assets/pipeline.png)
 
 [MICCAI 2024] The official code repository for paper "FairDiff: Fair Segmentation with Point-Image Diffusion".
 

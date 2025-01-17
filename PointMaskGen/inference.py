@@ -120,7 +120,7 @@ for file_name in tqdm(files, desc="Processing files", unit="file"):
     file_path = os.path.join(data_dir, file_name)
     points = read_point_cloud(file_path)
     # 1. Convert point cloud to image_blue and image_redW
-    image_blue, image_red = point_cloud_to_image(points, width, height)
+    image_blue, image_red = point_cloud_to_image(points, width=798, height=664)
     # 2. Corrosion expands to fill the blue and red areas
     mask_blue = blue_closed_operations(image_blue, kernel_size=15, iterations=20)
     mask_red = red_closed_operations(image_red, kernel_size=15, iterations=20)
